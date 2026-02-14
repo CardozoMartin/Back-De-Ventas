@@ -4,6 +4,7 @@ import { connectDB } from "./config/database";
 import dotenv from 'dotenv';
 import userRouter from "./routes/User.routes";
 import productRouter from "./routes/Product.routes";
+import auditRouter from "./routes/Audit.routes";
 
 dotenv.config();
 //creamos la isntancia de la aplicacion
@@ -21,6 +22,7 @@ app.use(Aplication.urlencoded({ extended: true }));
 //Rutas
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/products', productRouter);
+app.use('/api/v1/audits', auditRouter);
 
 //iniciamos el servidor
 app.listen(PORT, () => {

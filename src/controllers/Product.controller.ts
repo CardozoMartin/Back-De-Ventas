@@ -9,8 +9,11 @@ export class ProductController {
 
   //controlador para crear un producto
   async createProduct(req: Request, res: Response): Promise<Response> {
+    const user = (req as any).user;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    
     try {
-      const product = await this.productService.createProduct(req.body);
+      const product = await this.productService.createProduct(req.body, user._id || user.id, ip);
       const response: ISuccessResponse<typeof product> = {
         success: true,
         data: product,
@@ -66,10 +69,13 @@ export class ProductController {
   //controlador para obtener todos los productos
   async getAllProducts(req: Request, res: Response): Promise<Response> {
     try {
-      const products = await this.productService.getAllProducts();
-      const response: ISuccessResponse<typeof products> = {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      const result = await this.productService.getAllProducts(page, limit);
+      const response: ISuccessResponse<typeof result> = {
         success: true,
-        data: products,
+        data: result,
         message: "Productos obtenidos exitosamente",
         timestamp: new Date(),
       };
@@ -88,8 +94,11 @@ export class ProductController {
 
   //controlador para actualizar un producto
   async updateProduct(req: Request, res: Response): Promise<Response> {
+    const user = (req as any).user;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    
     try {
-      const product = await this.productService.updateProduct(req.params.id, req.body);
+      const product = await this.productService.updateProduct(req.params.id, req.body, user._id || user.id, ip);
       if (!product) {
         const response: IErrorResponse = {
           success: false,
@@ -121,8 +130,11 @@ export class ProductController {
 
   //controlador para eliminar un producto
   async deleteProduct(req: Request, res: Response): Promise<Response> {
+    const user = (req as any).user;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    
     try {
-      await this.productService.deleteProduct(req.params.id);
+      await this.productService.deleteProduct(req.params.id, user._id || user.id, ip);
       const response: ISuccessResponse<null> = {
         success: true,
         data: null,
@@ -144,6 +156,9 @@ export class ProductController {
 
   //controlador para aumentar el stock
   async increaseStock(req: Request, res: Response): Promise<Response> {
+    const user = (req as any).user;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    
     try {
       const { quantity } = req.body;
       if (!quantity || quantity <= 0) {
@@ -156,7 +171,7 @@ export class ProductController {
         };
         return res.status(400).json(response);
       }
-      const product = await this.productService.increaseStock(req.params.id, quantity);
+      const product = await this.productService.increaseStock(req.params.id, quantity, user._id || user.id, ip);
       if (!product) {
         const response: IErrorResponse = {
           success: false,
@@ -188,6 +203,9 @@ export class ProductController {
 
   //controlador para disminuir el stock
   async decreaseStock(req: Request, res: Response): Promise<Response> {
+    const user = (req as any).user;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    
     try {
       const { quantity } = req.body;
       if (!quantity || quantity <= 0) {
@@ -200,7 +218,7 @@ export class ProductController {
         };
         return res.status(400).json(response);
       }
-      const product = await this.productService.decreaseStock(req.params.id, quantity);
+      const product = await this.productService.decreaseStock(req.params.id, quantity, user._id || user.id, ip);
       if (!product) {
         const response: IErrorResponse = {
           success: false,
@@ -232,8 +250,11 @@ export class ProductController {
 
   //controlador para desactivar un producto
   async deactivateProduct(req: Request, res: Response): Promise<Response> {
+    const user = (req as any).user;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    
     try {
-      const product = await this.productService.deactivateProduct(req.params.id);
+      const product = await this.productService.deactivateProduct(req.params.id, user._id || user.id, ip);
       if (!product) {
         const response: IErrorResponse = {
           success: false,
@@ -256,6 +277,29 @@ export class ProductController {
         success: false,
         error: "Error al desactivar el producto",
         errorCode: "PRODUCT_DEACTIVATION_ERROR",
+        message: error instanceof Error ? error.message : "Error desconocido",
+        timestamp: new Date(),
+      };
+      return res.status(500).json(response);
+    }
+  }
+
+  //controlador para obtener todos los productos sin paginacion
+  async getAllProductsNoPagination(req: Request, res: Response): Promise<Response> {
+    try {
+      const products = await this.productService.getAllProductsSinPage();
+      const response: ISuccessResponse<typeof products> = {
+        success: true,
+        data: products,
+        message: "Productos obtenidos exitosamente",
+        timestamp: new Date(),
+      };
+      return res.status(200).json(response);
+    } catch (error) {
+      const response: IErrorResponse = {
+        success: false,
+        error: "Error al obtener los productos",
+        errorCode: "PRODUCTS_GET_ERROR",
         message: error instanceof Error ? error.message : "Error desconocido",
         timestamp: new Date(),
       };

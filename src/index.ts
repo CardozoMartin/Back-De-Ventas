@@ -18,15 +18,45 @@ connectDB();
 //definimos el puerto
 const PORT: number = 3000;
 
+//Orígenes permitidos
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:4173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'https://appstoreventas.netlify.app',
+  'https://web.jhservices.com.ar'
+];
+
 //middlewares
 app.use(Aplication.json());
 app.use(Aplication.urlencoded({ extended: true }));
-//configuramos los cors
+
+//configuramos los cors mejorado
 app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Permitir origen específico si está en la lista de permitidos
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    // Permitir sin origin (requests desde mismo origen o sin browser)
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '3600');
+
+  // Manejar preflight requests
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
     next();
+  }
 });
 
 //Rutas

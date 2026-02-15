@@ -201,4 +201,19 @@ export class ProductService {
 
     return productAfter;
   }
+
+  //funcion para buscar producto por nombre o codigo
+  async getOneProductByNameOrCode(nameOrCode: string): Promise<ProductDto | null> {
+    const product = await this.productRepository.getOneProductByNameOrCode(nameOrCode);
+    return product;
+  }
+
+  //funcion para buscar productos por coincidencias
+  async searchProductsByQuery(query: string): Promise<ProductDto[]> {
+    if (!query.trim()) {
+      return [];
+    }
+    const products = await this.productRepository.searchProductsByQuery(query);
+    return products;
+  }
 }

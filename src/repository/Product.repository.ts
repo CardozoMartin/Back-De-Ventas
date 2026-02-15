@@ -99,6 +99,31 @@ export class ProductRepository implements IProductRepository {
     return product ? this.toDto(product) : null;
   }
 
+  async getOneProductByNameOrCode(nameOrCode: string): Promise<ProductDto | null> {
+    const product = await Product.findOne({
+      $or: [
+        { name: nameOrCode },
+        { code: nameOrCode }
+      ]
+    });
+    return product ? this.toDto(product) : null;
+  }
+
+  async searchProductsByQuery(query: string): Promise<ProductDto[]> {
+    // Escape special regex characters
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: escapedQuery, $options: 'i' } },
+        { code: { $regex: escapedQuery, $options: 'i' } },
+        { description: { $regex: escapedQuery, $options: 'i' } }
+      ]
+    }).sort({ name: 1 });
+    
+    return products.map(product => this.toDto(product));
+  }
+
   private toDto(product: IProduct): ProductDto {
     const profit = product.price - product.costPrice;
     const profitMargin = product.costPrice > 0 ? (profit / product.costPrice) * 100 : 0;

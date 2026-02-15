@@ -9,7 +9,8 @@ export interface CreateSaleDetailCommand {
 export interface CreateSaleCommand {
   seller: string;
   paymentMethod: PaymentMethod;
-  details: CreateSaleDetailCommand[];
+  details?: CreateSaleDetailCommand[];
+  promotionId?: string;
   notes?: string;
 }
 
@@ -36,6 +37,7 @@ export interface SaleDto {
   id: string;
   seller: string;
   cashRegister: string;
+  promotion?: string;
   total: number;
   totalProfit?: number;
   status: SaleStatus;

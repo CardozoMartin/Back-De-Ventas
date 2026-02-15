@@ -306,4 +306,75 @@ export class ProductController {
       return res.status(500).json(response);
     }
   }
+
+  //controlador para obtener producto por nombre o ocodigo
+  async getOneProductByNameOrCode(req: Request, res: Response): Promise<Response> {
+    try {
+      const { nameOrCode } = req.params;
+      const product = await this.productService.getOneProductByNameOrCode(nameOrCode);
+      if (!product) {
+        const response: IErrorResponse = {
+          success: false,
+          error: "Producto no encontrado",
+          errorCode: "PRODUCT_NOT_FOUND",
+          message: "No se encontró un producto con el nombre o código proporcionado",
+          timestamp: new Date(),
+        };
+        return res.status(404).json(response);
+      }
+      const response: ISuccessResponse<typeof product> = {
+        success: true,
+        data: product,
+        message: "Producto obtenido exitosamente",
+        timestamp: new Date(),
+      };
+      return res.status(200).json(response);
+    } catch (error) {
+      const response: IErrorResponse = {
+        success: false,
+        error: "Error al obtener el producto",
+        errorCode: "PRODUCT_RETRIEVAL_ERROR",
+        message: error instanceof Error ? error.message : "Error desconocido",
+        timestamp: new Date(),
+      };
+      return res.status(500).json(response);
+    }
+  }
+
+  //controlador para buscar productos por coincidencias
+  async searchProducts(req: Request, res: Response): Promise<Response> {
+    try {
+      const { query } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        const response: IErrorResponse = {
+          success: false,
+          error: "Parámetro de búsqueda requerido",
+          errorCode: "MISSING_QUERY",
+          message: "Por favor proporciona un término de búsqueda",
+          timestamp: new Date(),
+        };
+        return res.status(400).json(response);
+      }
+
+      const products = await this.productService.searchProductsByQuery(query);
+      const response: ISuccessResponse<typeof products> = {
+        success: true,
+        data: products,
+        message: "Productos encontrados exitosamente",
+        timestamp: new Date(),
+      };
+      return res.status(200).json(response);
+    } catch (error) {
+      const response: IErrorResponse = {
+        success: false,
+        error: "Error al buscar productos",
+        errorCode: "PRODUCT_SEARCH_ERROR",
+        message: error instanceof Error ? error.message : "Error desconocido",
+        timestamp: new Date(),
+      };
+      return res.status(500).json(response);
+    }
+  }
 }
+

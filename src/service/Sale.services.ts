@@ -18,6 +18,14 @@ export class SaleService {
     };
     
     const sale = await this.saleRepository.createSale(fullCommand);
+
+    // Generar descripción basada en si es venta de promoción o no
+    let description: string;
+    if (sale.promotion) {
+      description = `Venta de promoción: ${sale.details?.length || 0} producto(s) - Total: $${sale.total} - Método: ${sale.paymentMethod}`;
+    } else {
+      description = `Venta creada: ${sale.details?.length || 0} producto(s) - Total: $${sale.total} - Método: ${sale.paymentMethod}`;
+    }
     
     // Registrar auditoría
     await this.auditService.createAudit({
@@ -25,13 +33,14 @@ export class SaleService {
       action: "SALE_COMPLETED",
       entity: "Sale",
       entityId: sale.id,
-      description: `Venta creada: ${sale.details?.length || 0} producto(s) - Total: $${sale.total} - Método: ${sale.paymentMethod}`,
+      description,
       changes: {
         after: {
           total: sale.total,
           status: sale.status,
           paymentMethod: sale.paymentMethod,
-          productsCount: sale.details?.length || 0
+          productsCount: sale.details?.length || 0,
+          promotion: sale.promotion || 'N/A'
         }
       },
       ip

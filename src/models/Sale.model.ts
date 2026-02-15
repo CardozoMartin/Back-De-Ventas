@@ -6,6 +6,7 @@ export type PaymentMethod = 'efectivo' | 'transferencia' | 'cuenta_corriente';
 export interface ISale extends Document {
   seller: Types.ObjectId;
   cashRegister: Types.ObjectId;
+  promotion?: Types.ObjectId;
   total: number;
   status: SaleStatus;
   paymentMethod: PaymentMethod;
@@ -45,6 +46,11 @@ const saleSchema = new Schema<ISale>(
     notes: {
       type: String,
       trim: true,
+    },
+    promotion: {
+      type: Schema.Types.ObjectId,
+      ref: 'Promotion',
+      default: null,
     },
   },
   {

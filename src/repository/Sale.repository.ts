@@ -1,6 +1,7 @@
 import { ISale, Sale, PaymentMethod, SaleStatus } from '../models/Sale.model';
 import { ISaleDetail, SaleDetail } from '../models/SaleDetail.model';
 import { Product } from '../models/Product.model';
+import { Promotion, IPromotion } from '../models/PromotionProducts.model';
 import { CashRegisterRepository } from './CashRegister.repository';
 import { injectable } from 'tsyringe';
 import { Types } from 'mongoose';
@@ -23,9 +24,9 @@ export class SaleRepository implements ISaleRepository {
   constructor(private cashRegisterRepository: CashRegisterRepository) { }
   
   async createSale(command: CreateSaleCommand): Promise<SaleDto> {
-    // Validar que hay detalles
-    if (!command.details || command.details.length === 0) {
-      throw new Error('La venta debe tener al menos un producto');
+    // Validar que hay detalles o promoting
+    if ((!command.details || command.details.length === 0) && !command.promotionId) {
+      throw new Error('La venta debe tener al menos un producto o una promoción');
     }
 
     // Verificar que existe una caja abierta
@@ -34,25 +35,83 @@ export class SaleRepository implements ISaleRepository {
       throw new Error('No hay una caja abierta. Debe abrir una caja antes de realizar ventas');
     }
 
-    // Validar productos y stock
-    const productsData = await Promise.all(
-      command.details.map(async (detail) => {
-        const product = await Product.findById(detail.productId);
-        if (!product) {
-          throw new Error(`Producto con ID ${detail.productId} no encontrado`);
+    let productsData: Array<{ product: any; quantity: number; isSalePrice?: boolean; unitPrice?: number; costPrice?: number }> = [];
+    let total: number = 0;
+    let promotion: IPromotion | null = null;
+
+    // Si viene promotionId, procesar la promoción
+    if (command.promotionId) {
+      promotion = await Promotion.findById(command.promotionId).populate('items.product');
+      
+      if (!promotion) {
+        throw new Error(`Promoción con ID ${command.promotionId} no encontrada`);
+      }
+
+      if (!promotion.active) {
+        throw new Error('La promoción no está activa');
+      }
+
+      if (promotion.stock !== undefined && promotion.stock < 1) {
+        throw new Error('No hay stock disponible de esta promoción');
+      }
+
+      // Procesar los items de la promoción
+      for (const item of promotion.items) {
+        const product = item.product as any;
+        
+        if (!product || !product._id) {
+          throw new Error(`Producto en la promoción no encontrado`);
         }
+
         if (!product.active) {
           throw new Error(`El producto ${product.name} no está activo`);
         }
-        if (product.stock < detail.quantity) {
-          throw new Error(`Stock insuficiente para ${product.name}. Disponible: ${product.stock}, Solicitado: ${detail.quantity}`);
+
+        if (product.stock < item.quantity) {
+          throw new Error(`Stock insuficiente para ${product.name}. Disponible: ${product.stock}, Requerido: ${item.quantity}`);
         }
-        return {
+
+        productsData.push({
           product,
-          quantity: detail.quantity,
-        };
-      })
-    );
+          quantity: item.quantity,
+          isSalePrice: true,
+          unitPrice: item.snapshotPrice,
+          costPrice: product.costPrice,
+        });
+      }
+
+      total = promotion.promoPrice;
+    } else {
+      // Procesar detalles normales
+      if (!command.details || command.details.length === 0) {
+        throw new Error('La venta debe tener al menos un producto');
+      }
+
+      const productsDataTemp = await Promise.all(
+        command.details.map(async (detail) => {
+          const product = await Product.findById(detail.productId);
+          if (!product) {
+            throw new Error(`Producto con ID ${detail.productId} no encontrado`);
+          }
+          if (!product.active) {
+            throw new Error(`El producto ${product.name} no está activo`);
+          }
+          if (product.stock < detail.quantity) {
+            throw new Error(`Stock insuficiente para ${product.name}. Disponible: ${product.stock}, Solicitado: ${detail.quantity}`);
+          }
+          return {
+            product,
+            quantity: detail.quantity,
+          };
+        })
+      );
+      productsData = productsDataTemp;
+
+      // Calcular el total
+      total = productsData.reduce((sum, item) => {
+        return sum + ((item.unitPrice || item.product.price) * item.quantity);
+      }, 0);
+    }
 
     // Determinar el estado según el método de pago
     let status: SaleStatus = 'pendiente';
@@ -60,15 +119,11 @@ export class SaleRepository implements ISaleRepository {
       status = 'pagado';
     }
 
-    // Calcular el total
-    const total = productsData.reduce((sum, item) => {
-      return sum + (item.product.price * item.quantity);
-    }, 0);
-
     // Crear la venta
     const sale = new Sale({
       seller: new Types.ObjectId(command.seller),
       cashRegister: new Types.ObjectId(openCashRegister.id),
+      promotion: promotion ? new Types.ObjectId(promotion._id) : undefined,
       total,
       status,
       paymentMethod: command.paymentMethod,
@@ -79,16 +134,19 @@ export class SaleRepository implements ISaleRepository {
     // Crear los detalles de la venta
     const saleDetails = await Promise.all(
       productsData.map(async (item) => {
+        const unitPrice = item.unitPrice || item.product.price;
+        const costPrice = item.costPrice || item.product.costPrice;
+        
         const saleDetail = new SaleDetail({
           sale: sale._id,
           product: item.product._id,
           productName: item.product.name,
           unitType: item.product.unitType,
-          unitPrice: item.product.price,
-          costPrice: item.product.costPrice,
+          unitPrice,
+          costPrice,
           quantity: item.quantity,
-          subtotal: item.product.price * item.quantity,
-          profit: (item.product.price - item.product.costPrice) * item.quantity,
+          subtotal: unitPrice * item.quantity,
+          profit: (unitPrice - costPrice) * item.quantity,
         });
         await saleDetail.save();
         return saleDetail;
@@ -102,6 +160,14 @@ export class SaleRepository implements ISaleRepository {
         await item.product.save();
       })
     );
+
+    // Si fue una venta de promoción, descontar el stock de la promoción
+    if (promotion) {
+      if (promotion.stock !== undefined) {
+        promotion.stock -= 1;
+        await promotion.save();
+      }
+    }
 
     // Actualizar los totales de la caja registradora
     await this.cashRegisterRepository.updateTotals(
@@ -217,6 +283,15 @@ export class SaleRepository implements ISaleRepository {
       })
     );
 
+    // Si fue una venta de promoción, devolver el stock de la promoción
+    if (sale.promotion) {
+      const promotion = await Promotion.findById(sale.promotion);
+      if (promotion && promotion.stock !== undefined) {
+        promotion.stock += 1;
+        await promotion.save();
+      }
+    }
+
     sale.status = 'cancelado';
     await sale.save();
 
@@ -267,6 +342,7 @@ export class SaleRepository implements ISaleRepository {
       id: sale._id.toString(),
       seller: sale.seller.toString(),
       cashRegister: sale.cashRegister.toString(),
+      promotion: sale.promotion ? sale.promotion.toString() : undefined,
       total: sale.total,
       totalProfit: parseFloat(totalProfit.toFixed(2)),
       status: sale.status,

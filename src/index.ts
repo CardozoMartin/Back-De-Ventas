@@ -7,6 +7,7 @@ import productRouter from "./routes/Product.routes";
 import auditRouter from "./routes/Audit.routes";
 import saleRouter from "./routes/Sale.routes";
 import cashRegisterRouter from "./routes/CashRegister.routes";
+import promotionRouter from "./routes/PromotionProducts.routes";
 
 dotenv.config();
 //creamos la isntancia de la aplicacion
@@ -34,6 +35,8 @@ app.use('/api/v1/products', productRouter);
 app.use('/api/v1/audits', auditRouter);
 app.use('/api/v1/sales', saleRouter);
 app.use('/api/v1/cash-registers', cashRegisterRouter);
+app.use('/api/v1/promotions', promotionRouter);
+
 
 //iniciamos el servidor
 app.listen(PORT, () => {

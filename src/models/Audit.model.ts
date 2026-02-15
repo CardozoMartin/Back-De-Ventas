@@ -7,9 +7,14 @@ export type AuditAction =
   | 'LOGIN'
   | 'LOGOUT'
   | 'SALE_COMPLETED'
-  | 'SALE_CANCELLED';
+  | 'SALE_CANCELLED'
+  | 'PROMOTION_CREATED'
+  | 'PROMOTION_UPDATED'
+  | 'PROMOTION_DELETED';
 
-export type AuditEntity = 'User' | 'Product' | 'Sale' | 'SaleDetail';
+  
+
+export type AuditEntity = 'User' | 'Product' | 'Sale' | 'SaleDetail' | 'Promotion';
 
 export interface IAudit extends Document {
   user: Types.ObjectId;
@@ -36,12 +41,12 @@ const auditSchema = new Schema<IAudit>(
     action: {
       type: String,
       required: true,
-      enum: ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'SALE_COMPLETED', 'SALE_CANCELLED'],
+      enum: ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'SALE_COMPLETED', 'SALE_CANCELLED', 'PROMOTION_CREATED', 'PROMOTION_UPDATED', 'PROMOTION_DELETED'],
     },
     entity: {
       type: String,
       required: true,
-      enum: ['User', 'Product', 'Sale', 'SaleDetail'],
+      enum: ['User', 'Product', 'Sale', 'SaleDetail', 'Promotion'],
     },
     entityId: {
       type: Schema.Types.ObjectId,

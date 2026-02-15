@@ -13,10 +13,14 @@ productRouter.post('/',verifyToken, productController.createProduct.bind(product
 //ruta para obtener todos los productos sin paginacion
 productRouter.get('/all', productController.getAllProductsNoPagination.bind(productController));
 
+//ruta para buscar productos por coincidencias
+productRouter.get('/search-match/query', productController.searchProducts.bind(productController));
+
 //ruta para obtener todos los productos
 productRouter.get('/', productController.getAllProducts.bind(productController));
 
-//ruta para obtener un producto por id
+//ruta para obtener un producto por nombre o código
+productRouter.get('/search/:nameOrCode', productController.getOneProductByNameOrCode.bind(productController));
 productRouter.get('/:id', productController.getProductById.bind(productController));
 
 //ruta para actualizar un producto

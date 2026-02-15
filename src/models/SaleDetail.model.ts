@@ -1,12 +1,16 @@
 import { Schema, model, Document, Model, Types } from 'mongoose';
+import { UnitType } from './Product.model';
 
 export interface ISaleDetail extends Document {
   sale: Types.ObjectId;
   product: Types.ObjectId;
   productName: string;
+  unitType: UnitType;
   unitPrice: number;
+  costPrice: number;
   quantity: number;
   subtotal: number;
+  profit?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,7 +31,17 @@ const saleDetailSchema = new Schema<ISaleDetail>(
       type: String,
       required: true,
     },
+    unitType: {
+      type: String,
+      enum: ['unidad', 'kilogramo'],
+      required: true,
+    },
     unitPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    costPrice: {
       type: Number,
       required: true,
       min: 0,
@@ -35,12 +49,16 @@ const saleDetailSchema = new Schema<ISaleDetail>(
     quantity: {
       type: Number,
       required: true,
-      min: [1, 'La cantidad mínima es 1'],
+      min: [0.001, 'La cantidad mínima es 0.001'],
     },
     subtotal: {
       type: Number,
       required: true,
       min: 0,
+    },
+    profit: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
@@ -48,6 +66,7 @@ const saleDetailSchema = new Schema<ISaleDetail>(
 
 saleDetailSchema.pre('save', function (next) {
   this.subtotal = this.unitPrice * this.quantity;
+  this.profit = (this.unitPrice - this.costPrice) * this.quantity;
   next();
 });
 

@@ -1,10 +1,11 @@
 import { Schema, model, Document, Model, Types } from 'mongoose';
 
-export type SaleStatus = 'pending' | 'completed' | 'cancelled';
-export type PaymentMethod = 'cash' | 'card' | 'transfer';
+export type SaleStatus = 'pendiente' | 'pagado' | 'cancelado';
+export type PaymentMethod = 'efectivo' | 'transferencia' | 'cuenta_corriente';
 
 export interface ISale extends Document {
   seller: Types.ObjectId;
+  cashRegister: Types.ObjectId;
   total: number;
   status: SaleStatus;
   paymentMethod: PaymentMethod;
@@ -20,6 +21,11 @@ const saleSchema = new Schema<ISale>(
       ref: 'User',
       required: [true, 'El vendedor es obligatorio'],
     },
+    cashRegister: {
+      type: Schema.Types.ObjectId,
+      ref: 'CashRegister',
+      required: [true, 'La caja registradora es obligatoria'],
+    },
     total: {
       type: Number,
       required: true,
@@ -28,12 +34,12 @@ const saleSchema = new Schema<ISale>(
     },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'cancelled'],
-      default: 'completed',
+      enum: ['pendiente', 'pagado', 'cancelado'],
+      default: 'pendiente',
     },
     paymentMethod: {
       type: String,
-      enum: ['cash', 'card', 'transfer'],
+      enum: ['efectivo', 'transferencia', 'cuenta_corriente'],
       required: [true, 'El método de pago es obligatorio'],
     },
     notes: {

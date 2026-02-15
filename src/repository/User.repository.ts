@@ -1,6 +1,7 @@
 import { IUser, User } from '../models/User.model';
 import { injectable } from 'tsyringe';
-import { CreateUserCommand, UpdateUserCommand, UserDto } from '../types/IUser.types';
+import { CreateUserCommand, UpdateUserCommand, UserDto, LoginCommand, LoginResponse } from '../types/IUser.types';
+import jwt from 'jsonwebtoken';
 
 
 //interfaz de usuario
@@ -10,6 +11,7 @@ interface IUserRepository {
   getAllUsers(): Promise<UserDto[]>;
   updateUser(id: string, command: UpdateUserCommand): Promise<UserDto | null>;
   deleteUser(id: string): Promise<void>;
+  login(command: LoginCommand): Promise<LoginResponse>;
 }
 
 @injectable()
@@ -37,6 +39,49 @@ export class UserRepository implements IUserRepository {
 
   async deleteUser(id: string): Promise<void> {
     await User.findByIdAndDelete(id);
+  }
+
+  async login(command: LoginCommand): Promise<LoginResponse> {
+    // Buscar usuario por email e incluir el password
+    const user = await User.findOne({ email: command.email }).select('+password');
+    
+    if (!user) {
+      throw new Error('Credenciales inválidas');
+    }
+
+    // Verificar si el usuario está activo
+    if (!user.active) {
+      throw new Error('Usuario inactivo');
+    }
+
+    // Comparar contraseñas
+    const isPasswordValid = await user.comparePassword(command.password);
+    
+    if (!isPasswordValid) {
+      throw new Error('Credenciales inválidas');
+    }
+
+    // Generar token JWT
+    const token = jwt.sign(
+      {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '24h' }
+    );
+
+    return {
+      token,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    };
   }
 
   private toDto(user: IUser): UserDto {

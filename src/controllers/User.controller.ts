@@ -137,4 +137,40 @@ export class UserController {
       return res.status(500).json(response);
     }
   }
+
+  //controlador para login
+  async login(req: Request, res: Response): Promise<Response> {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        const response: IErrorResponse = {
+          success: false,
+          error: "Datos incompletos",
+          errorCode: "MISSING_CREDENTIALS",
+          message: "Email y contraseña son requeridos",
+          timestamp: new Date(),
+        };
+        return res.status(400).json(response);
+      }
+
+      const loginData = await this.userService.login({ email, password });
+      const response: ISuccessResponse<typeof loginData> = {
+        success: true,
+        data: loginData,
+        message: "Login exitoso",
+        timestamp: new Date(),
+      };
+      return res.status(200).json(response);
+    } catch (error) {
+      const response: IErrorResponse = {
+        success: false,
+        error: "Error en el login",
+        errorCode: "LOGIN_ERROR",
+        message: error instanceof Error ? error.message : "Error desconocido",
+        timestamp: new Date(),
+      };
+      return res.status(401).json(response);
+    }
+  }
 }

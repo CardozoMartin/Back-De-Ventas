@@ -1,11 +1,12 @@
 import { injectable } from "tsyringe";
 import { UserRepository } from "../repository/User.repository";
-import { CreateUserCommand, UpdateUserCommand, UserDto } from "../types/IUser.types";
+import { CreateUserCommand, UpdateUserCommand, UserDto, LoginCommand, LoginResponse } from "../types/IUser.types";
 
 
 @injectable()
 export class UserService {
     constructor(private userRepository: UserRepository) { }
+    
     async createUser(command: CreateUserCommand): Promise<UserDto> {
         return this.userRepository.createUser(command);
     }
@@ -24,5 +25,9 @@ export class UserService {
 
     async deleteUser(id: string): Promise<void> {
         return this.userRepository.deleteUser(id);
+    }
+
+    async login(command: LoginCommand): Promise<LoginResponse> {
+        return this.userRepository.login(command);
     }
 }

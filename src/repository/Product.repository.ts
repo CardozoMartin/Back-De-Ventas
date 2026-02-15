@@ -1,12 +1,12 @@
 import { IProduct, Product } from '../models/Product.model';
 import { injectable } from 'tsyringe';
-import { CreateProductCommand, UpdateProductCommand, ProductDto } from '../types/IProduct.types';
+import { CreateProductCommand, UpdateProductCommand, ProductDto, PaginatedProductsDto } from '../types/IProduct.types';
 
 //interfaz de repositorio de productos
 interface IProductRepository {
   createProduct(command: CreateProductCommand): Promise<ProductDto>;
   getProductById(id: string): Promise<ProductDto | null>;
-  getAllProducts(): Promise<ProductDto[]>;
+  getAllProducts(page?: number, limit?: number): Promise<PaginatedProductsDto>;
   updateProduct(id: string, command: UpdateProductCommand): Promise<ProductDto | null>;
   deleteProduct(id: string): Promise<void>;
   increaseStock(id: string, quantity: number): Promise<ProductDto | null>;
@@ -27,8 +27,29 @@ export class ProductRepository implements IProductRepository {
     return product ? this.toDto(product) : null;
   }
 
-  async getAllProducts(): Promise<ProductDto[]> {
-    const products = await Product.find();
+  async getAllProducts(page: number = 1, limit: number = 10): Promise<PaginatedProductsDto> {
+    const skip = (page - 1) * limit;
+    
+    const [products, total] = await Promise.all([
+      Product.find().skip(skip).limit(limit).sort({ createdAt: -1 }),
+      Product.countDocuments()
+    ]);
+    
+    const pages = Math.ceil(total / limit);
+    
+    return {
+      products: products.map(product => this.toDto(product)),
+      pagination: {
+        total,
+        page,
+        limit,
+        pages
+      }
+    };
+  }
+
+  async getAllProductsSinPage(): Promise<ProductDto[]> {
+    const products = await Product.find().sort({ createdAt: -1 });
     return products.map(product => this.toDto(product));
   }
 
@@ -79,14 +100,22 @@ export class ProductRepository implements IProductRepository {
   }
 
   private toDto(product: IProduct): ProductDto {
+    const profit = product.price - product.costPrice;
+    const profitMargin = product.costPrice > 0 ? (profit / product.costPrice) * 100 : 0;
+    
     return {
       id: product._id.toString(),
       name: product.name,
+      code: product.code,
       description: product.description,
       price: product.price,
+      costPrice: product.costPrice,
       stock: product.stock,
+      unitType: product.unitType,
       category: product.category,
       active: product.active,
+      profit: parseFloat(profit.toFixed(2)),
+      profitMargin: parseFloat(profitMargin.toFixed(2)),
       createdAt: product.createdAt,
     };
   }

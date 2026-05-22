@@ -150,9 +150,8 @@ export class ProductRepository implements IProductRepository {
     
     const products = await Product.find({
       $or: [
-        { name: { $regex: escapedQuery, $options: 'i' } },
-        { code: { $regex: escapedQuery, $options: 'i' } },
-        { description: { $regex: escapedQuery, $options: 'i' } }
+        { name: { $regex: '^' + escapedQuery, $options: 'i' } },
+        { code: { $regex: '^' + escapedQuery, $options: 'i' } }
       ]
     }).sort({ name: 1 });
     

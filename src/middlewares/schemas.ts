@@ -200,6 +200,9 @@ export const createPromotionSchema = z.object({
     .max(200)
     .trim(),
   description: z.string().max(500).trim().optional(),
+  type: z.enum(['bundle', 'quantity', 'mixed'], {
+    message: 'El tipo de promoción es obligatorio',
+  }),
   items: z.array(promotionItemSchema)
     .min(1, 'La promoción debe tener al menos un producto'),
   originalPrice: z.number().min(0),
@@ -208,11 +211,14 @@ export const createPromotionSchema = z.object({
   savings: z.number().min(0).optional(),
   stock: z.number().int().min(0).optional(),
   active: z.boolean().default(true),
+  startsAt: z.preprocess((val) => (val === '' || val === null ? undefined : val), z.coerce.date().optional()),
+  endsAt: z.preprocess((val) => (val === '' || val === null ? undefined : val), z.coerce.date().optional()),
 });
 
 export const updatePromotionSchema = z.object({
   name: z.string().min(1).max(200).trim().optional(),
   description: z.string().max(500).trim().optional(),
+  type: z.enum(['bundle', 'quantity', 'mixed']).optional(),
   items: z.array(promotionItemSchema).min(1).optional(),
   originalPrice: z.number().min(0).optional(),
   promoPrice: z.number().min(0).optional(),
@@ -220,6 +226,8 @@ export const updatePromotionSchema = z.object({
   savings: z.number().min(0).optional(),
   stock: z.number().int().min(0).optional(),
   active: z.boolean().optional(),
+  startsAt: z.preprocess((val) => (val === '' || val === null ? undefined : val), z.coerce.date().optional()),
+  endsAt: z.preprocess((val) => (val === '' || val === null ? undefined : val), z.coerce.date().optional()),
 }).strict();
 
 // ==================== AUDITORÍA ====================

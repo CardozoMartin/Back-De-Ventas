@@ -4,6 +4,7 @@ import { ISuccessResponse, IErrorResponse } from "../types/IResponse.types";
 import { Request, Response, NextFunction } from "express";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../middlewares/errorHandler";
+import { io } from "../index";
 
 @injectable()
 export class CashRegisterController {
@@ -31,6 +32,10 @@ export class CashRegisterController {
         message: "Caja abierta exitosamente",
         timestamp: new Date(),
       };
+      
+      // Emitir evento WebSocket para actualizar en vivo los dashboards
+      io.emit('cashRegisterStateChanged');
+      
       res.status(201).json(response);
   });
 
@@ -131,6 +136,10 @@ export class CashRegisterController {
         message: "Caja cerrada exitosamente",
         timestamp: new Date(),
       };
+      
+      // Emitir evento WebSocket para actualizar en vivo los dashboards
+      io.emit('cashRegisterStateChanged');
+      
       res.status(200).json(response);
   });
 }

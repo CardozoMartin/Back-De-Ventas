@@ -4,6 +4,7 @@ import { ISuccessResponse, IErrorResponse } from "../types/IResponse.types";
 import { Request, Response, NextFunction } from "express";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../middlewares/errorHandler";
+import { io } from "../index";
 
 @injectable()
 export class SaleController {
@@ -20,6 +21,9 @@ export class SaleController {
         message: "Venta creada exitosamente",
         timestamp: new Date(),
       };
+      
+      io.emit('saleStateChanged');
+      
       res.status(201).json(response);
   });
 
@@ -101,6 +105,9 @@ export class SaleController {
         message: "Venta actualizada exitosamente",
         timestamp: new Date(),
       };
+      
+      io.emit('saleStateChanged');
+      
       res.status(200).json(response);
   });
 
@@ -119,6 +126,9 @@ export class SaleController {
         message: "Venta cancelada exitosamente. Se devolvió el stock a los productos.",
         timestamp: new Date(),
       };
+      
+      io.emit('saleStateChanged');
+      
       res.status(200).json(response);
   });
 
@@ -137,6 +147,9 @@ export class SaleController {
         message: "Venta completada exitosamente",
         timestamp: new Date(),
       };
+      
+      io.emit('saleStateChanged');
+      
       res.status(200).json(response);
   });
 }

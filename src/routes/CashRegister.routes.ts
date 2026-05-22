@@ -1,17 +1,20 @@
 import { Router } from "express";
 import { container } from "tsyringe";
 import { CashRegisterController } from "../controllers/CashRegister.controller";
-import { verifyToken } from "../middlewares/TokeVerify";
+import { verifyToken } from "../middlewares/TokenVerify";
+import { validate } from "../middlewares/validateRequest";
+import { openCashRegisterSchema, closeCashRegisterSchema } from "../middlewares/schemas";
 
 const cashRegisterRoutes = Router();
 const cashRegisterController = container.resolve(CashRegisterController);
 
 // ==================== RUTAS ESPECÍFICAS (van primero) ====================
 
-// Abrir caja - Requiere autenticación
+// Abrir caja - Requiere autenticación + validación
 cashRegisterRoutes.post(
   "/open",
   verifyToken,
+  validate(openCashRegisterSchema),
   (req, res) => cashRegisterController.openCashRegister(req, res)
 );
 
@@ -45,10 +48,11 @@ cashRegisterRoutes.get(
   (req, res) => cashRegisterController.getCashRegisterById(req, res)
 );
 
-// Cerrar caja - Requiere autenticación
+// Cerrar caja - Requiere autenticación + validación
 cashRegisterRoutes.post(
   "/:id/close",
   verifyToken,
+  validate(closeCashRegisterSchema),
   (req, res) => cashRegisterController.closeCashRegister(req, res)
 );
 

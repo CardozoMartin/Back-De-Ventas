@@ -68,4 +68,12 @@ const productSchema = new Schema<IProduct>(
   { timestamps: true }
 );
 
+// ==================== ÍNDICES ====================
+// Búsqueda de texto por nombre de producto
+productSchema.index({ name: 'text', description: 'text' });
+// Filtro frecuente: productos activos por categoría
+productSchema.index({ active: 1, category: 1 });
+// Stock bajo alertas
+productSchema.index({ active: 1, stock: 1 });
+
 export const Product: Model<IProduct> = model<IProduct>('Product', productSchema);

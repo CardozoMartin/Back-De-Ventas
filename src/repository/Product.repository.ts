@@ -1,6 +1,8 @@
 import { IProduct, Product } from '../models/Product.model';
 import { injectable } from 'tsyringe';
 import { CreateProductCommand, UpdateProductCommand, ProductDto, PaginatedProductsDto } from '../types/IProduct.types';
+import { analyzeProductPricing, normalizeWeightProductCost } from '../utils/productPricing';
+import { roundWeightKg } from '../utils/formatQuantity';
 
 //interfaz de repositorio de productos
 interface IProductRepository {
@@ -17,7 +19,8 @@ interface IProductRepository {
 @injectable()
 export class ProductRepository implements IProductRepository {
   async createProduct(command: CreateProductCommand): Promise<ProductDto> {
-    const product = new Product(command);
+    const normalized = this.normalizeCommand(command);
+    const product = new Product(normalized);
     await product.save();
     return this.toDto(product);
   }
@@ -54,8 +57,40 @@ export class ProductRepository implements IProductRepository {
   }
 
   async updateProduct(id: string, command: UpdateProductCommand): Promise<ProductDto | null> {
-    const product = await Product.findByIdAndUpdate(id, command, { new: true });
+    const normalized = this.normalizeCommand(command);
+    const product = await Product.findByIdAndUpdate(id, normalized, { new: true });
     return product ? this.toDto(product) : null;
+  }
+
+  private normalizeCommand(command: CreateProductCommand | UpdateProductCommand): typeof command {
+    let result = { ...command };
+    const unitType = result.unitType;
+    const price = result.price;
+    let stock = result.stock;
+    const costPrice = result.costPrice;
+
+    if (unitType === 'kilogramo' && stock !== undefined) {
+      result = { ...result, stock: roundWeightKg(stock) };
+      stock = result.stock;
+    }
+
+    if (
+      unitType === 'kilogramo' &&
+      price !== undefined &&
+      stock !== undefined &&
+      costPrice !== undefined
+    ) {
+      const normalizedCost = normalizeWeightProductCost(
+        unitType,
+        price,
+        costPrice,
+        stock
+      );
+      if (normalizedCost !== undefined && normalizedCost !== costPrice) {
+        result = { ...result, costPrice: normalizedCost };
+      }
+    }
+    return result;
   }
 
   async deleteProduct(id: string): Promise<void> {
@@ -125,9 +160,13 @@ export class ProductRepository implements IProductRepository {
   }
 
   private toDto(product: IProduct): ProductDto {
-    const profit = product.price - product.costPrice;
-    const profitMargin = product.costPrice > 0 ? (profit / product.costPrice) * 100 : 0;
-    
+    const pricing = analyzeProductPricing({
+      price: product.price,
+      costPrice: product.costPrice,
+      stock: product.stock,
+      unitType: product.unitType,
+    });
+
     return {
       id: product._id.toString(),
       name: product.name,
@@ -139,8 +178,8 @@ export class ProductRepository implements IProductRepository {
       unitType: product.unitType,
       category: product.category,
       active: product.active,
-      profit: parseFloat(profit.toFixed(2)),
-      profitMargin: parseFloat(profitMargin.toFixed(2)),
+      profit: pricing.profitPerUnit,
+      profitMargin: pricing.marginPct,
       createdAt: product.createdAt,
     };
   }

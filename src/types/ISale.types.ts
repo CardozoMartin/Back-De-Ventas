@@ -9,8 +9,11 @@ export interface CreateSaleDetailCommand {
 export interface CreateSaleCommand {
   seller: string;
   paymentMethod: PaymentMethod;
+  clientId?: string;   // ID del cliente para cuentas corrientes (fiado)
   details?: CreateSaleDetailCommand[];
   promotionId?: string;
+  /** Cantidad de packs promocionales (default 1) */
+  promotionQuantity?: number;
   notes?: string;
 }
 
@@ -38,6 +41,7 @@ export interface SaleDto {
   seller: string;
   cashRegister: string;
   promotion?: string;
+  client?: string; // ID del cliente
   total: number;
   totalProfit?: number;
   status: SaleStatus;
@@ -46,4 +50,11 @@ export interface SaleDto {
   details?: SaleDetailDto[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PaginatedSalesResponse {
+  sales: SaleDto[];
+  totalRecords: number;
+  totalPages: number;
+  currentPage: number;
 }

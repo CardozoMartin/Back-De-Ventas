@@ -10,11 +10,12 @@ export type AuditAction =
   | 'SALE_CANCELLED'
   | 'PROMOTION_CREATED'
   | 'PROMOTION_UPDATED'
-  | 'PROMOTION_DELETED';
+  | 'PROMOTION_DELETED'
+  | 'DEBT_PAYMENT';
 
   
 
-export type AuditEntity = 'User' | 'Product' | 'Sale' | 'SaleDetail' | 'Promotion';
+export type AuditEntity = 'User' | 'Product' | 'Sale' | 'SaleDetail' | 'Promotion' | 'CashRegister' | 'Client';
 
 export interface IAudit extends Document {
   user: Types.ObjectId;
@@ -41,12 +42,12 @@ const auditSchema = new Schema<IAudit>(
     action: {
       type: String,
       required: true,
-      enum: ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'SALE_COMPLETED', 'SALE_CANCELLED', 'PROMOTION_CREATED', 'PROMOTION_UPDATED', 'PROMOTION_DELETED'],
+      enum: ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'SALE_COMPLETED', 'SALE_CANCELLED', 'PROMOTION_CREATED', 'PROMOTION_UPDATED', 'PROMOTION_DELETED', 'DEBT_PAYMENT'],
     },
     entity: {
       type: String,
       required: true,
-      enum: ['User', 'Product', 'Sale', 'SaleDetail', 'Promotion'],
+      enum: ['User', 'Product', 'Sale', 'SaleDetail', 'Promotion', 'CashRegister', 'Client'],
     },
     entityId: {
       type: Schema.Types.ObjectId,

@@ -1,6 +1,6 @@
 import { injectable } from "tsyringe";
 import { SaleRepository } from "../repository/Sale.repository";
-import { CreateSaleCommand, UpdateSaleCommand, SaleDto } from "../types/ISale.types";
+import { CreateSaleCommand, UpdateSaleCommand, SaleDto, PaginatedSalesResponse } from "../types/ISale.types";
 import { AuditService } from "./Audit.services";
 
 @injectable()
@@ -53,8 +53,8 @@ export class SaleService {
     return this.saleRepository.getSaleById(id);
   }
 
-  async getAllSales(): Promise<SaleDto[]> {
-    return this.saleRepository.getAllSales();
+  async getAllSales(page?: number, limit?: number): Promise<PaginatedSalesResponse> {
+    return this.saleRepository.getAllSales(page, limit);
   }
 
   async getSalesBySeller(sellerId: string): Promise<SaleDto[]> {

@@ -8,6 +8,8 @@ import auditRouter from "./routes/Audit.routes";
 import saleRouter from "./routes/Sale.routes";
 import cashRegisterRouter from "./routes/CashRegister.routes";
 import promotionRouter from "./routes/PromotionProducts.routes";
+import clientRouter from "./routes/Client.routes";
+import cashMovementRouter from "./routes/CashMovement.routes";
 
 dotenv.config();
 //creamos la isntancia de la aplicacion
@@ -17,6 +19,10 @@ connectDB();
 
 //definimos el puerto
 const PORT: number = 3000;
+
+import cors from 'cors';
+
+// ... other imports stay the same ...
 
 //Orígenes permitidos
 const allowedOrigins = [
@@ -30,34 +36,24 @@ const allowedOrigins = [
   'https://web.jhservices.com.ar'
 ];
 
+//configuramos cors con el paquete oficial
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  maxAge: 3600
+}));
+
 //middlewares
 app.use(Aplication.json());
 app.use(Aplication.urlencoded({ extended: true }));
-
-//configuramos los cors mejorado
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Permitir origen específico si está en la lista de permitidos
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-    // Permitir sin origin (requests desde mismo origen o sin browser)
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '3600');
-
-  // Manejar preflight requests
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
 
 //Rutas
 app.use('/api/v1/users', userRouter);
@@ -66,6 +62,8 @@ app.use('/api/v1/audits', auditRouter);
 app.use('/api/v1/sales', saleRouter);
 app.use('/api/v1/cash-registers', cashRegisterRouter);
 app.use('/api/v1/promotions', promotionRouter);
+app.use('/api/v1/clients', clientRouter);
+app.use('/api/v1/cash-movements', cashMovementRouter);
 
 
 //iniciamos el servidor

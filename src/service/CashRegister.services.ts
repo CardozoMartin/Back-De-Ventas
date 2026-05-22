@@ -17,7 +17,7 @@ export class CashRegisterService {
     await this.auditService.createAudit({
       user: command.user,
       action: "CREATE",
-      entity: "Sale",
+      entity: "CashRegister",
       entityId: cashRegister.id,
       description: `Caja abierta - Monto inicial: $${cashRegister.initialCash}`,
       changes: {
@@ -62,16 +62,17 @@ export class CashRegisterService {
       await this.auditService.createAudit({
         user: userId,
         action: "UPDATE",
-        entity: "Sale",
+        entity: "CashRegister",
         entityId: cashRegisterAfter.id,
         description: `Caja cerrada - Total ventas: $${cashRegisterAfter.totalSales} - Diferencia: $${cashRegisterAfter.difference || 0}`,
         changes: {
           before: { status: cashRegisterBefore.status },
           after: {
             status: cashRegisterAfter.status,
-            finalCash: cashRegisterAfter.finalCash,
-            leftForNext: cashRegisterAfter.leftForNext,
+            cashCounted: cashRegisterAfter.cashCounted,
             totalSales: cashRegisterAfter.totalSales,
+            totalWithdrawals: cashRegisterAfter.totalWithdrawals,
+            totalDeposits: cashRegisterAfter.totalDeposits,
             difference: cashRegisterAfter.difference
           }
         },

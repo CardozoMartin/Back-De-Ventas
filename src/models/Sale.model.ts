@@ -7,6 +7,7 @@ export interface ISale extends Document {
   seller: Types.ObjectId;
   cashRegister: Types.ObjectId;
   promotion?: Types.ObjectId;
+  client?: Types.ObjectId; // Relación opcional con cliente real
   total: number;
   status: SaleStatus;
   paymentMethod: PaymentMethod;
@@ -52,6 +53,11 @@ const saleSchema = new Schema<ISale>(
       ref: 'Promotion',
       default: null,
     },
+    client: {
+      type: Schema.Types.ObjectId,
+      ref: 'Client',
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -65,5 +71,13 @@ saleSchema.virtual('details', {
   localField: '_id',
   foreignField: 'sale',
 });
+
+// ==================== ÍNDICES ====================
+// Consultas frecuentes: ventas por caja (dashboard diario), por vendedor (reportes), por fecha
+saleSchema.index({ cashRegister: 1, status: 1, createdAt: -1 });
+saleSchema.index({ seller: 1, createdAt: -1 });
+saleSchema.index({ status: 1 });
+saleSchema.index({ createdAt: -1 });
+saleSchema.index({ paymentMethod: 1, createdAt: -1 });
 
 export const Sale: Model<ISale> = model<ISale>('Sale', saleSchema);

@@ -17,6 +17,7 @@ export interface UpdateProductCommand {
   description?: string;
   price?: number;
   costPrice?: number;
+  stock?: number;
   category?: string;
   active?: boolean;
   unitType?: UnitType;

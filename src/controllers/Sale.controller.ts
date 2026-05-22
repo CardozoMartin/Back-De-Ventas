@@ -69,10 +69,20 @@ export class SaleController {
   //controlador para obtener todas las ventas
   async getAllSales(req: Request, res: Response): Promise<Response> {
     try {
-      const sales = await this.saleService.getAllSales();
-      const response: ISuccessResponse<typeof sales> = {
+      const page = req.query.page ? parseInt(req.query.page as string) : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+
+      const result = await this.saleService.getAllSales(page, limit);
+      
+      const response = {
         success: true,
-        data: sales,
+        data: result.sales,
+        pagination: {
+          totalRecords: result.totalRecords,
+          totalPages: result.totalPages,
+          currentPage: result.currentPage,
+          limit: limit || result.totalRecords
+        },
         message: "Ventas obtenidas exitosamente",
         timestamp: new Date(),
       };

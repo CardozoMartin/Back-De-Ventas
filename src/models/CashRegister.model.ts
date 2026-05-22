@@ -9,11 +9,17 @@ export interface ICashRegister extends Document {
   closedAt?: Date;
   initialCash: number;
   finalCash?: number;
-  leftForNext: number;
+  totalWithdrawals: number;
+  totalDeposits: number;
+  cashCounted?: number;
+  denominationCount?: Record<string, number>;
   totalCash: number;
   totalTransfer: number;
   totalCuentaCorriente: number;
+  totalDebtPayments: number; // Pagos de deudas recibidos durante esta caja
   totalSales: number;
+  totalCost: number;
+  totalProfit: number;
   salesCount: number;
   notes?: string;
   createdAt: Date;
@@ -50,10 +56,22 @@ const cashRegisterSchema = new Schema<ICashRegister>(
       type: Number,
       min: [0, 'El monto final no puede ser negativo'],
     },
-    leftForNext: {
+    totalWithdrawals: {
       type: Number,
       default: 0,
-      min: [0, 'El monto dejado para la próxima caja no puede ser negativo'],
+      min: 0,
+    },
+    totalDeposits: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    cashCounted: {
+      type: Number,
+      min: [0, 'El monto contado no puede ser negativo'],
+    },
+    denominationCount: {
+      type: Schema.Types.Mixed,
     },
     totalCash: {
       type: Number,
@@ -70,10 +88,24 @@ const cashRegisterSchema = new Schema<ICashRegister>(
       default: 0,
       min: 0,
     },
+    totalDebtPayments: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     totalSales: {
       type: Number,
       default: 0,
       min: 0,
+    },
+    totalCost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalProfit: {
+      type: Number,
+      default: 0,
     },
     salesCount: {
       type: Number,

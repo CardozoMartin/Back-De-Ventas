@@ -176,25 +176,14 @@ export class CashRegisterController {
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     
     try {
-      const { finalCash, leftForNext, notes } = req.body;
+      const { cashCounted, denominationCount, notes } = req.body;
 
-      if (finalCash === undefined || finalCash < 0) {
+      if (cashCounted === undefined || cashCounted < 0) {
         const response: IErrorResponse = {
           success: false,
-          error: "Monto final inválido",
-          errorCode: "INVALID_FINAL_CASH",
-          message: "El monto final debe ser mayor o igual a 0",
-          timestamp: new Date(),
-        };
-        return res.status(400).json(response);
-      }
-
-      if (leftForNext === undefined || leftForNext < 0) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "Monto dejado inválido",
-          errorCode: "INVALID_LEFT_FOR_NEXT",
-          message: "El monto dejado para la próxima caja debe ser mayor o igual a 0",
+          error: "Monto contado inválido",
+          errorCode: "INVALID_CASH_COUNTED",
+          message: "El monto contado debe ser mayor o igual a 0",
           timestamp: new Date(),
         };
         return res.status(400).json(response);
@@ -202,7 +191,7 @@ export class CashRegisterController {
 
       const cashRegister = await this.cashRegisterService.closeCashRegister(
         req.params.id,
-        { finalCash, leftForNext, notes },
+        { cashCounted, denominationCount, notes },
         user._id || user.id,
         ip
       );

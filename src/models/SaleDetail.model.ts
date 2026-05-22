@@ -70,4 +70,9 @@ saleDetailSchema.pre('save', function (next) {
   next();
 });
 
+// ==================== ÍNDICES ====================
+// Lookup frecuente: obtener detalles por venta
+saleDetailSchema.index({ sale: 1 });
+saleDetailSchema.index({ product: 1 });
+
 export const SaleDetail: Model<ISaleDetail> = model<ISaleDetail>('SaleDetail', saleDetailSchema);

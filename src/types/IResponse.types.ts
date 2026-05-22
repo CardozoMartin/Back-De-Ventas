@@ -16,3 +16,13 @@ export interface IErrorResponse extends IBaseApiResponse {
     error: string;
     errorCode?: string;
 }
+
+// Respuesta paginada
+export interface IPaginatedResponse<T> extends ISuccessResponse<T> {
+    pagination: {
+        totalRecords: number;
+        totalPages: number;
+        currentPage: number;
+        limit: number;
+    }
+}

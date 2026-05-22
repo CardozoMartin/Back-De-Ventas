@@ -13,6 +13,7 @@ import promotionRouter from "./routes/PromotionProducts.routes";
 import clientRouter from "./routes/Client.routes";
 import cashMovementRouter from "./routes/CashMovement.routes";
 import { errorHandler } from "./middlewares/errorHandler";
+import { ProductMaintenanceJob } from "./service/ProductMaintenanceJob";
 
 dotenv.config();
 //creamos la isntancia de la aplicacion
@@ -93,6 +94,9 @@ app.use('/api/v1/cash-movements', cashMovementRouter);
 
 // Manejador de errores global (debe ir al final de todas las rutas)
 app.use(errorHandler);
+
+// Inicializar tareas programadas (Cron jobs)
+ProductMaintenanceJob.init();
 
 //iniciamos el servidor
 server.listen(PORT, () => {

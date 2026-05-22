@@ -8,7 +8,7 @@ import { roundWeightKg } from '../utils/formatQuantity';
 interface IProductRepository {
   createProduct(command: CreateProductCommand): Promise<ProductDto>;
   getProductById(id: string): Promise<ProductDto | null>;
-  getAllProducts(page?: number, limit?: number): Promise<PaginatedProductsDto>;
+  getAllProducts(page?: number, limit?: number, status?: string): Promise<PaginatedProductsDto>;
   updateProduct(id: string, command: UpdateProductCommand): Promise<ProductDto | null>;
   deleteProduct(id: string): Promise<void>;
   increaseStock(id: string, quantity: number): Promise<ProductDto | null>;
@@ -30,12 +30,17 @@ export class ProductRepository implements IProductRepository {
     return product ? this.toDto(product) : null;
   }
 
-  async getAllProducts(page: number = 1, limit: number = 10): Promise<PaginatedProductsDto> {
+  async getAllProducts(page: number = 1, limit: number = 10, status?: string): Promise<PaginatedProductsDto> {
     const skip = (page - 1) * limit;
     
+    const filter: any = {};
+    if (status) {
+      filter.status = status;
+    }
+    
     const [products, total] = await Promise.all([
-      Product.find().skip(skip).limit(limit).sort({ createdAt: -1 }),
-      Product.countDocuments()
+      Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
+      Product.countDocuments(filter)
     ]);
     
     const pages = Math.ceil(total / limit);
@@ -58,6 +63,16 @@ export class ProductRepository implements IProductRepository {
 
   async updateProduct(id: string, command: UpdateProductCommand): Promise<ProductDto | null> {
     const normalized = this.normalizeCommand(command);
+    const currentProduct = await Product.findById(id);
+    if (!currentProduct) return null;
+
+    if (normalized.price !== undefined && normalized.price !== currentProduct.price) {
+      (normalized as any).lastPriceUpdate = new Date();
+    }
+    if (normalized.stock !== undefined && normalized.stock !== currentProduct.stock) {
+      (normalized as any).lastStockUpdate = new Date();
+    }
+
     const product = await Product.findByIdAndUpdate(id, normalized, { new: true });
     return product ? this.toDto(product) : null;
   }
@@ -103,7 +118,10 @@ export class ProductRepository implements IProductRepository {
     }
     const product = await Product.findByIdAndUpdate(
       id,
-      { $inc: { stock: quantity } },
+      { 
+        $inc: { stock: quantity },
+        $set: { lastStockUpdate: new Date() }
+      },
       { new: true }
     );
     return product ? this.toDto(product) : null;
@@ -121,6 +139,7 @@ export class ProductRepository implements IProductRepository {
       throw new Error('No hay suficiente stock disponible');
     }
     product.stock -= quantity;
+    product.lastStockUpdate = new Date();
     await product.save();
     return this.toDto(product);
   }
@@ -177,8 +196,11 @@ export class ProductRepository implements IProductRepository {
       unitType: product.unitType,
       category: product.category,
       active: product.active,
+      status: product.status,
       profit: pricing.profitPerUnit,
       profitMargin: pricing.marginPct,
+      lastPriceUpdate: product.lastPriceUpdate,
+      lastStockUpdate: product.lastStockUpdate,
       createdAt: product.createdAt,
     };
   }

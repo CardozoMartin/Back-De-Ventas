@@ -1,6 +1,7 @@
 import { Schema, model, Document, Model } from 'mongoose';
 
 export type UnitType = 'unidad' | 'kilogramo';
+export type ProductStatus = 'activo' | 'incompleto' | 'pendiente_revision' | 'sin_movimiento' | 'oculto' | 'archivado';
 
 export interface IProduct extends Document {
   name: string;
@@ -12,6 +13,9 @@ export interface IProduct extends Document {
   unitType: UnitType;
   category?: string;
   active: boolean;
+  status: ProductStatus;
+  lastPriceUpdate: Date;
+  lastStockUpdate: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,6 +67,19 @@ const productSchema = new Schema<IProduct>(
     active: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
+      enum: ['activo', 'incompleto', 'pendiente_revision', 'sin_movimiento', 'oculto', 'archivado'],
+      default: 'activo',
+    },
+    lastPriceUpdate: {
+      type: Date,
+      default: Date.now,
+    },
+    lastStockUpdate: {
+      type: Date,
+      default: Date.now,
     },
   },
   { timestamps: true }

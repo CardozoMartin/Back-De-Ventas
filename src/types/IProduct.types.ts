@@ -1,4 +1,4 @@
-import { UnitType } from '../models/Product.model';
+import { UnitType, ProductStatus } from '../models/Product.model';
 
 export interface CreateProductCommand {
   name: string;
@@ -20,6 +20,7 @@ export interface UpdateProductCommand {
   stock?: number;
   category?: string;
   active?: boolean;
+  status?: ProductStatus;
   unitType?: UnitType;
 }
 
@@ -34,6 +35,7 @@ export interface FindProductsQuery {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  status?: ProductStatus | string;
   page?: number;
   limit?: number;
 }
@@ -49,8 +51,11 @@ export interface ProductDto {
   unitType: UnitType;
   category?: string;
   active: boolean;
+  status: ProductStatus;
   profit?: number;
   profitMargin?: number;
+  lastPriceUpdate: Date;
+  lastStockUpdate: Date;
   createdAt: Date;
 }
 

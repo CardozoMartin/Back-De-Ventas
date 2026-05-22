@@ -38,8 +38,8 @@ export class ProductService {
     return this.productRepository.getProductById(id);
   }
 
-  async getAllProducts(page?: number, limit?: number) {
-    return this.productRepository.getAllProducts(page, limit);
+  async getAllProducts(page?: number, limit?: number, status?: string) {
+    return this.productRepository.getAllProducts(page, limit, status);
   }
    async getAllProductsSinPage(): Promise<ProductDto[]> {
     return this.productRepository.getAllProductsSinPage();

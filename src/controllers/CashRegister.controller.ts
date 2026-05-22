@@ -57,14 +57,13 @@ export class CashRegisterController {
       const cashRegister = await this.cashRegisterService.getOpenCashRegister();
       
       if (!cashRegister) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "No hay caja abierta",
-          errorCode: "NO_OPEN_CASH_REGISTER",
+        const response: ISuccessResponse<null> = {
+          success: true,
+          data: null,
           message: "No existe ninguna caja abierta actualmente",
           timestamp: new Date(),
         };
-        return res.status(404).json(response);
+        return res.status(200).json(response);
       }
 
       const response: ISuccessResponse<typeof cashRegister> = {

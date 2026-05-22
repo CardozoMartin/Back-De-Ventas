@@ -97,10 +97,14 @@ export class AuditRepository implements IAuditRepository {
     await Audit.deleteMany({});
   }
 
-  private toDto(audit: IAudit): AuditDto {
+  private toDto(audit: any): AuditDto {
+    const userId = audit.user && typeof audit.user === 'object' && audit.user._id 
+      ? audit.user._id.toString() 
+      : audit.user?.toString();
+      
     return {
       id: audit._id.toString(),
-      user: audit.user.toString(),
+      user: userId,
       action: audit.action,
       entity: audit.entity,
       entityId: audit.entityId?.toString(),

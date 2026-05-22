@@ -1,176 +1,95 @@
 import { injectable } from "tsyringe";
-import { UserService } from "../service/User.services";
-import { ISuccessResponse, IErrorResponse } from "../types/IResponse.types";
-import { Request, Response } from "express";
+import { UserService } from "../service/User.service";
+import { ISuccessResponse } from "../types/IResponse.types";
+import { Request, Response, NextFunction } from "express";
+import { AppError } from "../middlewares/errorHandler";
+import { catchAsync } from "../utils/catchAsync";
 
 @injectable()
 export class UserController {
   constructor(private userService: UserService) {}
 
   //controlador para crear un usuario
-  async createUser(req: Request, res: Response): Promise<Response> {
-    try {
-      const user = await this.userService.createUser(req.body);
-      const response: ISuccessResponse<typeof user> = {
-        success: true,
-        data: user,
-        message: "Usuario creado exitosamente",
-        timestamp: new Date(),
-      };
-      return res.status(201).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al crear el usuario",
-        errorCode: "USER_CREATION_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+  createUser = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const user = await this.userService.createUser(req.body);
+    const response: ISuccessResponse<typeof user> = {
+      success: true,
+      data: user,
+      message: "Usuario creado exitosamente",
+      timestamp: new Date(),
+    };
+    res.status(201).json(response);
+  });
+
   //controlador para obtener un usuario por id
-  async getUserById(req: Request, res: Response): Promise<Response> {
-    try {
-      const user = await this.userService.getUserById(req.params.id);
-      if (!user) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "Usuario no encontrado",
-          errorCode: "USER_NOT_FOUND",
-          message: "No se encontró un usuario con el ID proporcionado",
-          timestamp: new Date(),
-        };
-        return res.status(404).json(response);
-      }
-      const response: ISuccessResponse<typeof user> = {
-        success: true,
-        data: user,
-        message: "Usuario obtenido exitosamente",
-        timestamp: new Date(),
-      };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al obtener el usuario",
-        errorCode: "USER_RETRIEVAL_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
+  getUserById = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const user = await this.userService.getUserById(req.params.id);
+    if (!user) {
+      throw new AppError("No se encontró un usuario con el ID proporcionado", 404, "USER_NOT_FOUND");
     }
-  }
+    const response: ISuccessResponse<typeof user> = {
+      success: true,
+      data: user,
+      message: "Usuario obtenido exitosamente",
+      timestamp: new Date(),
+    };
+    res.status(200).json(response);
+  });
+
   //controlador para obtener todos los usuarios
-  async getAllUsers(req: Request, res: Response): Promise<Response> {
-    try {
-      const users = await this.userService.getAllUsers();
-      const response: ISuccessResponse<typeof users> = {
-        success: true,
-        data: users,
-        message: "Usuarios obtenidos exitosamente",
-        timestamp: new Date(),
-      };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al obtener los usuarios",
-        errorCode: "USERS_RETRIEVAL_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+  getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const users = await this.userService.getAllUsers();
+    const response: ISuccessResponse<typeof users> = {
+      success: true,
+      data: users,
+      message: "Usuarios obtenidos exitosamente",
+      timestamp: new Date(),
+    };
+    res.status(200).json(response);
+  });
+
   //controlador para actualizar un usuario
-  async updateUser(req: Request, res: Response): Promise<Response> {
-    try {
-      const user = await this.userService.updateUser(req.params.id, req.body);
-      if (!user) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "Usuario no encontrado",
-          errorCode: "USER_NOT_FOUND",
-          message: "No se encontró un usuario con el ID proporcionado",
-          timestamp: new Date(),
-        };
-        return res.status(404).json(response);
-      }
-      const response: ISuccessResponse<typeof user> = {
-        success: true,
-        data: user,
-        message: "Usuario actualizado exitosamente",
-        timestamp: new Date(),
-      };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al actualizar el usuario",
-        errorCode: "USER_UPDATE_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
+  updateUser = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const user = await this.userService.updateUser(req.params.id, req.body);
+    if (!user) {
+      throw new AppError("No se encontró un usuario con el ID proporcionado", 404, "USER_NOT_FOUND");
     }
-  }
+    const response: ISuccessResponse<typeof user> = {
+      success: true,
+      data: user,
+      message: "Usuario actualizado exitosamente",
+      timestamp: new Date(),
+    };
+    res.status(200).json(response);
+  });
+
   //controlador para eliminar un usuario
-  async deleteUser(req: Request, res: Response): Promise<Response> {
-    try {
-      await this.userService.deleteUser(req.params.id);
-      const response: ISuccessResponse<null> = {
-        success: true,
-        data: null,
-        message: "Usuario eliminado exitosamente",
-        timestamp: new Date(),
-      };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al eliminar el usuario",
-        errorCode: "USER_DELETION_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+  deleteUser = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    await this.userService.deleteUser(req.params.id);
+    const response: ISuccessResponse<null> = {
+      success: true,
+      data: null,
+      message: "Usuario eliminado exitosamente",
+      timestamp: new Date(),
+    };
+    res.status(200).json(response);
+  });
 
   //controlador para login
-  async login(req: Request, res: Response): Promise<Response> {
-    try {
-      const { email, password } = req.body;
+  login = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { email, password } = req.body;
 
-      if (!email || !password) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "Datos incompletos",
-          errorCode: "MISSING_CREDENTIALS",
-          message: "Email y contraseña son requeridos",
-          timestamp: new Date(),
-        };
-        return res.status(400).json(response);
-      }
-
-      const loginData = await this.userService.login({ email, password });
-      const response: ISuccessResponse<typeof loginData> = {
-        success: true,
-        data: loginData,
-        message: "Login exitoso",
-        timestamp: new Date(),
-      };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error en el login",
-        errorCode: "LOGIN_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(401).json(response);
+    if (!email || !password) {
+      throw new AppError("Email y contraseña son requeridos", 400, "MISSING_CREDENTIALS");
     }
-  }
+
+    const loginData = await this.userService.login({ email, password });
+    const response: ISuccessResponse<typeof loginData> = {
+      success: true,
+      data: loginData,
+      message: "Login exitoso",
+      timestamp: new Date(),
+    };
+    res.status(200).json(response);
+  });
 }

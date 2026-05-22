@@ -13,14 +13,14 @@ cashMovementRoutes.post(
   '/',
   verifyToken,
   validate(createCashMovementSchema),
-  (req, res) => cashMovementController.createMovement(req, res)
+  cashMovementController.createMovement
 );
 
 // Obtener movimientos por caja
 cashMovementRoutes.get(
   '/:cashRegisterId',
   verifyToken,
-  (req, res) => cashMovementController.getMovementsByCashRegister(req, res)
+  cashMovementController.getMovementsByCashRegister
 );
 
 export default cashMovementRoutes;

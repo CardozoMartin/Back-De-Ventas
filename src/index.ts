@@ -12,6 +12,7 @@ import cashRegisterRouter from "./routes/CashRegister.routes";
 import promotionRouter from "./routes/PromotionProducts.routes";
 import clientRouter from "./routes/Client.routes";
 import cashMovementRouter from "./routes/CashMovement.routes";
+import { errorHandler } from "./middlewares/errorHandler";
 
 dotenv.config();
 //creamos la isntancia de la aplicacion
@@ -90,6 +91,8 @@ app.use('/api/v1/promotions', promotionRouter);
 app.use('/api/v1/clients', clientRouter);
 app.use('/api/v1/cash-movements', cashMovementRouter);
 
+// Manejador de errores global (debe ir al final de todas las rutas)
+app.use(errorHandler);
 
 //iniciamos el servidor
 server.listen(PORT, () => {

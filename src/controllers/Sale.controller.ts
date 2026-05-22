@@ -1,18 +1,18 @@
 import { injectable } from "tsyringe";
-import { SaleService } from "../service/Sale.services";
+import { SaleService } from "../service/Sale.service";
 import { ISuccessResponse, IErrorResponse } from "../types/IResponse.types";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
+import { catchAsync } from "../utils/catchAsync";
+import { AppError } from "../middlewares/errorHandler";
 
 @injectable()
 export class SaleController {
   constructor(private saleService: SaleService) { }
 
   //controlador para crear una venta
-  async createSale(req: Request, res: Response): Promise<Response> {
+  createSale = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const user = (req as any).user;
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
-    
-    try {
       const sale = await this.saleService.createSale(req.body, user._id || user.id, ip);
       const response: ISuccessResponse<typeof sale> = {
         success: true,
@@ -20,32 +20,14 @@ export class SaleController {
         message: "Venta creada exitosamente",
         timestamp: new Date(),
       };
-      return res.status(201).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al crear la venta",
-        errorCode: "SALE_CREATION_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(201).json(response);
+  });
 
   //controlador para obtener una venta por id
-  async getSaleById(req: Request, res: Response): Promise<Response> {
-    try {
+  getSaleById = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       const sale = await this.saleService.getSaleById(req.params.id);
       if (!sale) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "Venta no encontrada",
-          errorCode: "SALE_NOT_FOUND",
-          message: "No se encontró una venta con el ID proporcionado",
-          timestamp: new Date(),
-        };
-        return res.status(404).json(response);
+        throw new AppError("No se encontró una venta con el ID proporcionado", 404, "SALE_NOT_FOUND");
       }
       const response: ISuccessResponse<typeof sale> = {
         success: true,
@@ -53,22 +35,11 @@ export class SaleController {
         message: "Venta obtenida exitosamente",
         timestamp: new Date(),
       };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al obtener la venta",
-        errorCode: "SALE_RETRIEVAL_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(200).json(response);
+  });
 
   //controlador para obtener todas las ventas
-  async getAllSales(req: Request, res: Response): Promise<Response> {
-    try {
+  getAllSales = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       const page = req.query.page ? parseInt(req.query.page as string) : undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
 
@@ -86,22 +57,11 @@ export class SaleController {
         message: "Ventas obtenidas exitosamente",
         timestamp: new Date(),
       };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al obtener las ventas",
-        errorCode: "SALES_RETRIEVAL_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(200).json(response);
+  });
 
   //controlador para obtener ventas por vendedor
-  async getSalesBySeller(req: Request, res: Response): Promise<Response> {
-    try {
+  getSalesBySeller = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       const { sellerId } = req.params;
       const sales = await this.saleService.getSalesBySeller(sellerId);
       const response: ISuccessResponse<typeof sales> = {
@@ -110,22 +70,11 @@ export class SaleController {
         message: "Ventas del vendedor obtenidas exitosamente",
         timestamp: new Date(),
       };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al obtener las ventas del vendedor",
-        errorCode: "SELLER_SALES_RETRIEVAL_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(200).json(response);
+  });
 
   //controlador para obtener ventas por caja registradora
-  async getSalesByCashRegister(req: Request, res: Response): Promise<Response> {
-    try {
+  getSalesByCashRegister = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       const { cashRegisterId } = req.params;
       const sales = await this.saleService.getSalesByCashRegister(cashRegisterId);
       const response: ISuccessResponse<typeof sales> = {
@@ -134,35 +83,17 @@ export class SaleController {
         message: "Ventas de la caja obtenidas exitosamente",
         timestamp: new Date(),
       };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al obtener las ventas de la caja",
-        errorCode: "CASH_REGISTER_SALES_RETRIEVAL_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(200).json(response);
+  });
 
   //controlador para actualizar una venta
-  async updateSale(req: Request, res: Response): Promise<Response> {
+  updateSale = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const user = (req as any).user;
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     
-    try {
       const sale = await this.saleService.updateSale(req.params.id, req.body, user._id || user.id, ip);
       if (!sale) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "Venta no encontrada",
-          errorCode: "SALE_NOT_FOUND",
-          message: "No se encontró una venta con el ID proporcionado",
-          timestamp: new Date(),
-        };
-        return res.status(404).json(response);
+        throw new AppError("No se encontró una venta con el ID proporcionado", 404, "SALE_NOT_FOUND");
       }
       const response: ISuccessResponse<typeof sale> = {
         success: true,
@@ -170,35 +101,17 @@ export class SaleController {
         message: "Venta actualizada exitosamente",
         timestamp: new Date(),
       };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al actualizar la venta",
-        errorCode: "SALE_UPDATE_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(200).json(response);
+  });
 
   //controlador para cancelar una venta
-  async cancelSale(req: Request, res: Response): Promise<Response> {
+  cancelSale = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const user = (req as any).user;
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     
-    try {
       const sale = await this.saleService.cancelSale(req.params.id, user._id || user.id, ip);
       if (!sale) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "Venta no encontrada",
-          errorCode: "SALE_NOT_FOUND",
-          message: "No se encontró una venta con el ID proporcionado",
-          timestamp: new Date(),
-        };
-        return res.status(404).json(response);
+        throw new AppError("No se encontró una venta con el ID proporcionado", 404, "SALE_NOT_FOUND");
       }
       const response: ISuccessResponse<typeof sale> = {
         success: true,
@@ -206,35 +119,17 @@ export class SaleController {
         message: "Venta cancelada exitosamente. Se devolvió el stock a los productos.",
         timestamp: new Date(),
       };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al cancelar la venta",
-        errorCode: "SALE_CANCELLATION_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(200).json(response);
+  });
 
   //controlador para completar una venta (de pendiente a pagado)
-  async completeSale(req: Request, res: Response): Promise<Response> {
+  completeSale = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const user = (req as any).user;
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     
-    try {
       const sale = await this.saleService.completeSale(req.params.id, user._id || user.id, ip);
       if (!sale) {
-        const response: IErrorResponse = {
-          success: false,
-          error: "Venta no encontrada",
-          errorCode: "SALE_NOT_FOUND",
-          message: "No se encontró una venta con el ID proporcionado",
-          timestamp: new Date(),
-        };
-        return res.status(404).json(response);
+        throw new AppError("No se encontró una venta con el ID proporcionado", 404, "SALE_NOT_FOUND");
       }
       const response: ISuccessResponse<typeof sale> = {
         success: true,
@@ -242,16 +137,6 @@ export class SaleController {
         message: "Venta completada exitosamente",
         timestamp: new Date(),
       };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: "Error al completar la venta",
-        errorCode: "SALE_COMPLETION_ERROR",
-        message: error instanceof Error ? error.message : "Error desconocido",
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(200).json(response);
+  });
 }

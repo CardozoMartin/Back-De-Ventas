@@ -38,7 +38,7 @@ export interface SaleDetailDto {
 
 export interface SaleDto {
   id: string;
-  seller: string;
+  seller: { id: string; name: string } | string;
   cashRegister: string;
   promotion?: string;
   client?: string; // ID del cliente

@@ -15,21 +15,21 @@ cashRegisterRoutes.post(
   "/open",
   verifyToken,
   validate(openCashRegisterSchema),
-  (req, res) => cashRegisterController.openCashRegister(req, res)
+  cashRegisterController.openCashRegister
 );
 
 // Obtener caja abierta actualmente
 cashRegisterRoutes.get(
   "/current",
   verifyToken,
-  (req, res) => cashRegisterController.getOpenCashRegister(req, res)
+  cashRegisterController.getOpenCashRegister
 );
 
 // Obtener cajas por usuario
 cashRegisterRoutes.get(
   "/user/:userId",
   verifyToken,
-  (req, res) => cashRegisterController.getCashRegistersByUser(req, res)
+  cashRegisterController.getCashRegistersByUser
 );
 
 // ==================== RUTAS GENÉRICAS (van al final) ====================
@@ -38,14 +38,14 @@ cashRegisterRoutes.get(
 cashRegisterRoutes.get(
   "/",
   verifyToken,
-  (req, res) => cashRegisterController.getAllCashRegisters(req, res)
+  cashRegisterController.getAllCashRegisters
 );
 
 // Obtener caja por ID
 cashRegisterRoutes.get(
   "/:id",
   verifyToken,
-  (req, res) => cashRegisterController.getCashRegisterById(req, res)
+  cashRegisterController.getCashRegisterById
 );
 
 // Cerrar caja - Requiere autenticación + validación
@@ -53,7 +53,7 @@ cashRegisterRoutes.post(
   "/:id/close",
   verifyToken,
   validate(closeCashRegisterSchema),
-  (req, res) => cashRegisterController.closeCashRegister(req, res)
+  cashRegisterController.closeCashRegister
 );
 
 export default cashRegisterRoutes;

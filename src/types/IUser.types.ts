@@ -24,6 +24,8 @@ export interface LoginResponse {
     name: string;
     email: string;
     role: 'admin' | 'vendedor';
+    active: boolean;
+    createdAt: Date;
   };
 }
 

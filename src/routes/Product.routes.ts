@@ -5,39 +5,40 @@ import { container } from 'tsyringe';
 import { verifyToken } from '../middlewares/TokenVerify';
 import { validate } from '../middlewares/validateRequest';
 import { createProductSchema, updateProductSchema, stockChangeSchema } from '../middlewares/schemas';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const productRouter = Router();
 const productController = container.resolve(ProductController);
 
 //ruta para crear un producto
-productRouter.post('/', verifyToken, validate(createProductSchema), productController.createProduct.bind(productController));
+productRouter.post('/', verifyToken, validate(createProductSchema), productController.createProduct);
 
 //ruta para obtener todos los productos sin paginacion
-productRouter.get('/all', verifyToken, productController.getAllProductsNoPagination.bind(productController));
+productRouter.get('/all', verifyToken, productController.getAllProductsNoPagination);
 
 //ruta para buscar productos por coincidencias
-productRouter.get('/search-match/query', verifyToken, productController.searchProducts.bind(productController));
+productRouter.get('/search-match/query', verifyToken, productController.searchProducts);
 
 //ruta para obtener todos los productos
-productRouter.get('/', verifyToken, productController.getAllProducts.bind(productController));
+productRouter.get('/', verifyToken, productController.getAllProducts);
 
 //ruta para obtener un producto por nombre o código
-productRouter.get('/search/:nameOrCode', verifyToken, productController.getOneProductByNameOrCode.bind(productController));
-productRouter.get('/:id', verifyToken, productController.getProductById.bind(productController));
+productRouter.get('/search/:nameOrCode', verifyToken, productController.getOneProductByNameOrCode);
+productRouter.get('/:id', verifyToken, productController.getProductById);
 
 //ruta para actualizar un producto
-productRouter.put('/:id', verifyToken, validate(updateProductSchema), productController.updateProduct.bind(productController));
+productRouter.put('/:id', verifyToken, validate(updateProductSchema), productController.updateProduct);
 
 //ruta para eliminar un producto
-productRouter.delete('/:id', verifyToken, productController.deleteProduct.bind(productController));
+productRouter.delete('/:id', verifyToken, productController.deleteProduct);
 
 //ruta para aumentar stock
-productRouter.post('/:id/increase-stock', verifyToken, validate(stockChangeSchema), productController.increaseStock.bind(productController));
+productRouter.post('/:id/increase-stock', verifyToken, validate(stockChangeSchema), productController.increaseStock);
 
 //ruta para disminuir stock
-productRouter.post('/:id/decrease-stock', verifyToken, validate(stockChangeSchema), productController.decreaseStock.bind(productController));
+productRouter.post('/:id/decrease-stock', verifyToken, validate(stockChangeSchema), productController.decreaseStock);
 
 //ruta para desactivar un producto
-productRouter.post('/:id/deactivate', verifyToken, productController.deactivateProduct.bind(productController));
+productRouter.post('/:id/deactivate', verifyToken, productController.deactivateProduct);
 
 export default productRouter;

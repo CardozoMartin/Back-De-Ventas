@@ -20,15 +20,6 @@ interface ICashRegisterRepository {
 export class CashRegisterRepository implements ICashRegisterRepository {
   
   async openCashRegister(command: OpenCashRegisterCommand): Promise<CashRegisterDto> {
-    // Verificar que no haya una caja abierta para este usuario específico
-    const openCashRegister = await CashRegister.findOne({ 
-      status: 'abierta',
-      user: new Types.ObjectId(command.user)
-    });
-    
-    if (openCashRegister) {
-      throw new Error('Ya tienes una caja abierta. Debes cerrarla antes de abrir una nueva.');
-    }
 
     const cashRegister = new CashRegister({
       user: new Types.ObjectId(command.user),
@@ -156,10 +147,6 @@ export class CashRegisterRepository implements ICashRegisterRepository {
     
     if (!cashRegister) {
       return null;
-    }
-
-    if (cashRegister.status === 'cerrada') {
-      throw new Error('Esta caja ya está cerrada');
     }
 
     cashRegister.status = 'cerrada';

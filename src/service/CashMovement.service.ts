@@ -1,7 +1,7 @@
 import { injectable } from 'tsyringe';
 import { CashMovementRepository } from '../repository/CashMovement.repository';
 import { CashRegisterRepository } from '../repository/CashRegister.repository';
-import { AuditService } from './Audit.services';
+import { AuditService } from './Audit.service';
 import { CreateCashMovementCommand, CashMovementDto } from '../types/ICashMovement.types';
 
 @injectable()

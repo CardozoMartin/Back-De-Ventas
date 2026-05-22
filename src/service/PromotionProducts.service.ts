@@ -1,7 +1,7 @@
 import { injectable } from "tsyringe";
 import { PromotionRepository } from "../repository/PromotionProducts.repository";
 import { CreatePromotionCommand, UpdatePromotionCommand, PromotionDto } from "../types/IPromotionProducts.types";
-import { AuditService } from "./Audit.services";
+import { AuditService } from "./Audit.service";
 
 @injectable()
 export class PromotionService {

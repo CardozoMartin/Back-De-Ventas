@@ -1,7 +1,7 @@
 import { injectable } from "tsyringe";
 import { CashRegisterRepository } from "../repository/CashRegister.repository";
 import { OpenCashRegisterCommand, CloseCashRegisterCommand, CashRegisterDto } from "../types/ICashRegister.types";
-import { AuditService } from "./Audit.services";
+import { AuditService } from "./Audit.service";
 
 @injectable()
 export class CashRegisterService {
@@ -11,6 +11,11 @@ export class CashRegisterService {
   ) { }
 
   async openCashRegister(command: OpenCashRegisterCommand, ip?: string): Promise<CashRegisterDto> {
+    const openRegister = await this.cashRegisterRepository.getOpenCashRegister(command.user);
+    if (openRegister) {
+      throw new Error('Ya tienes una caja abierta. Debes cerrarla antes de abrir una nueva.');
+    }
+
     const cashRegister = await this.cashRegisterRepository.openCashRegister(command);
     
     // Registrar auditoría
@@ -53,6 +58,10 @@ export class CashRegisterService {
     
     if (!cashRegisterBefore) {
       return null;
+    }
+
+    if (cashRegisterBefore.status === 'cerrada') {
+      throw new Error('Esta caja ya está cerrada');
     }
 
     const cashRegisterAfter = await this.cashRegisterRepository.closeCashRegister(id, command);

@@ -543,8 +543,11 @@ export class SaleRepository implements ISaleRepository {
     
     return {
       id: sale._id.toString(),
-      seller: (sale.seller as any).name ? (sale.seller as any).name : sale.seller.toString(),
-      cashRegister: sale.cashRegister.toString(),
+      seller: {
+        id: (sale.seller as any)._id ? (sale.seller as any)._id.toString() : sale.seller.toString(),
+        name: (sale.seller as any).name || 'Desconocido'
+      },
+      cashRegister: (sale.cashRegister as any)._id ? (sale.cashRegister as any)._id.toString() : sale.cashRegister.toString(),
       promotion: sale.promotion ? sale.promotion.toString() : undefined,
       client: sale.client ? sale.client.toString() : undefined,
       total: sale.total,

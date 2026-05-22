@@ -1,17 +1,17 @@
 import { injectable } from 'tsyringe';
-import { CashMovementService } from '../service/CashMovement.services';
+import { CashMovementService } from '../service/CashMovement.service';
 import { ISuccessResponse, IErrorResponse } from '../types/IResponse.types';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { catchAsync } from "../utils/catchAsync";
+import { AppError } from "../middlewares/errorHandler";
 
 @injectable()
 export class CashMovementController {
   constructor(private cashMovementService: CashMovementService) {}
 
-  async createMovement(req: Request, res: Response): Promise<Response> {
+  createMovement = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const user = (req as any).user;
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
-
-    try {
       const { cashRegisterId, type, amount, reason, notes } = req.body;
 
       const movement = await this.cashMovementService.createMovement({
@@ -29,21 +29,10 @@ export class CashMovementController {
         message: `${type === 'retiro' ? 'Retiro' : 'Ingreso'} registrado exitosamente`,
         timestamp: new Date(),
       };
-      return res.status(201).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: 'Error al registrar movimiento',
-        errorCode: 'CASH_MOVEMENT_ERROR',
-        message: error instanceof Error ? error.message : 'Error desconocido',
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(201).json(response);
+  });
 
-  async getMovementsByCashRegister(req: Request, res: Response): Promise<Response> {
-    try {
+  getMovementsByCashRegister = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       const { cashRegisterId } = req.params;
       const movements = await this.cashMovementService.getMovementsByCashRegister(cashRegisterId);
 
@@ -53,16 +42,6 @@ export class CashMovementController {
         message: 'Movimientos obtenidos exitosamente',
         timestamp: new Date(),
       };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response: IErrorResponse = {
-        success: false,
-        error: 'Error al obtener movimientos',
-        errorCode: 'CASH_MOVEMENTS_RETRIEVAL_ERROR',
-        message: error instanceof Error ? error.message : 'Error desconocido',
-        timestamp: new Date(),
-      };
-      return res.status(500).json(response);
-    }
-  }
+      res.status(200).json(response);
+  });
 }

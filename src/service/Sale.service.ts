@@ -1,7 +1,7 @@
 import { injectable } from "tsyringe";
 import { SaleRepository } from "../repository/Sale.repository";
 import { CreateSaleCommand, UpdateSaleCommand, SaleDto, PaginatedSalesResponse } from "../types/ISale.types";
-import { AuditService } from "./Audit.services";
+import { AuditService } from "./Audit.service";
 
 @injectable()
 export class SaleService {

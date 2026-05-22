@@ -32,8 +32,8 @@ export class CashRegisterService {
     return cashRegister;
   }
 
-  async getOpenCashRegister(): Promise<CashRegisterDto | null> {
-    return this.cashRegisterRepository.getOpenCashRegister();
+  async getOpenCashRegister(userId?: string): Promise<CashRegisterDto | null> {
+    return this.cashRegisterRepository.getOpenCashRegister(userId);
   }
 
   async getCashRegisterById(id: string): Promise<CashRegisterDto | null> {

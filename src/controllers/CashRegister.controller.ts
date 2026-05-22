@@ -53,8 +53,9 @@ export class CashRegisterController {
 
   //controlador para obtener caja abierta
   async getOpenCashRegister(req: Request, res: Response): Promise<Response> {
+    const user = (req as any).user;
     try {
-      const cashRegister = await this.cashRegisterService.getOpenCashRegister();
+      const cashRegister = await this.cashRegisterService.getOpenCashRegister(user?._id || user?.id);
       
       if (!cashRegister) {
         const response: ISuccessResponse<null> = {

@@ -8,7 +8,7 @@ import { OpenCashRegisterCommand, CloseCashRegisterCommand, CashRegisterDto } fr
 
 interface ICashRegisterRepository {
   openCashRegister(command: OpenCashRegisterCommand): Promise<CashRegisterDto>;
-  getOpenCashRegister(): Promise<CashRegisterDto | null>;
+  getOpenCashRegister(userId?: string): Promise<CashRegisterDto | null>;
   getCashRegisterById(id: string): Promise<CashRegisterDto | null>;
   getAllCashRegisters(): Promise<CashRegisterDto[]>;
   getCashRegistersByUser(userId: string): Promise<CashRegisterDto[]>;
@@ -20,11 +20,14 @@ interface ICashRegisterRepository {
 export class CashRegisterRepository implements ICashRegisterRepository {
   
   async openCashRegister(command: OpenCashRegisterCommand): Promise<CashRegisterDto> {
-    // Verificar que no haya una caja abierta
-    const openCashRegister = await CashRegister.findOne({ status: 'abierta' });
+    // Verificar que no haya una caja abierta para este usuario específico
+    const openCashRegister = await CashRegister.findOne({ 
+      status: 'abierta',
+      user: new Types.ObjectId(command.user)
+    });
     
     if (openCashRegister) {
-      throw new Error('Ya existe una caja abierta. Debe cerrarla antes de abrir una nueva.');
+      throw new Error('Ya tienes una caja abierta. Debes cerrarla antes de abrir una nueva.');
     }
 
     const cashRegister = new CashRegister({
@@ -39,8 +42,13 @@ export class CashRegisterRepository implements ICashRegisterRepository {
     return this.toDto(cashRegister);
   }
 
-  async getOpenCashRegister(): Promise<CashRegisterDto | null> {
-    const cashRegister = await CashRegister.findOne({ status: 'abierta' })
+  async getOpenCashRegister(userId?: string): Promise<CashRegisterDto | null> {
+    const query: Record<string, any> = { status: 'abierta' };
+    if (userId) {
+      query.user = new Types.ObjectId(userId);
+    }
+
+    const cashRegister = await CashRegister.findOne(query)
       .populate('user', 'name email');
 
     if (cashRegister) {

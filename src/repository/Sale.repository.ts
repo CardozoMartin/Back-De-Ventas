@@ -33,10 +33,10 @@ export class SaleRepository implements ISaleRepository {
       throw new Error('La venta debe tener al menos un producto o una promoción');
     }
 
-    // Verificar que existe una caja abierta
-    const openCashRegister = await this.cashRegisterRepository.getOpenCashRegister();
+    // Verificar que existe una caja abierta para este vendedor/cajero
+    const openCashRegister = await this.cashRegisterRepository.getOpenCashRegister(command.seller);
     if (!openCashRegister) {
-      throw new Error('No hay una caja abierta. Debe abrir una caja antes de realizar ventas');
+      throw new Error('No tienes una caja abierta. Debes abrir una caja antes de realizar ventas');
     }
 
     let productsData: Array<{ product: any; quantity: number; isSalePrice?: boolean; unitPrice?: number; costPrice?: number }> = [];
@@ -247,6 +247,22 @@ export class SaleRepository implements ISaleRepository {
 
       // Commit de la transacción
       await session.commitTransaction();
+
+      // Emitir actualización de stock vía WebSocket de forma diferida
+      setImmediate(() => {
+        try {
+          const { io } = require('../index');
+          if (io) {
+            const updatedProducts = productsData.map(item => ({
+              productId: item.product._id.toString(),
+              newStock: item.product.stock
+            }));
+            io.emit('products_stock_updated', updatedProducts);
+          }
+        } catch (wsError) {
+          console.error('⚠️ Error al emitir stock por WebSocket:', wsError);
+        }
+      });
 
       return this.toDto(sale, saleDetails);
     } catch (error) {

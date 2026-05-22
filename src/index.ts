@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import Aplication,{ Express } from "express";
 import { connectDB } from "./config/database";
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server as SocketServer } from 'socket.io';
 import userRouter from "./routes/User.routes";
 import productRouter from "./routes/Product.routes";
 import auditRouter from "./routes/Audit.routes";
@@ -51,6 +53,29 @@ app.use(cors({
   maxAge: 3600
 }));
 
+// Crear servidor HTTP y Socket.io
+export const server = createServer(app);
+export const io = new SocketServer(server, {
+  cors: {
+    origin: function(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    credentials: true
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log(`🔌 Cliente conectado por WebSocket: ${socket.id}`);
+  socket.on('disconnect', () => {
+    console.log(`🔌 Cliente desconectado: ${socket.id}`);
+  });
+});
+
 //middlewares
 app.use(Aplication.json());
 app.use(Aplication.urlencoded({ extended: true }));
@@ -67,6 +92,6 @@ app.use('/api/v1/cash-movements', cashMovementRouter);
 
 
 //iniciamos el servidor
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
 });

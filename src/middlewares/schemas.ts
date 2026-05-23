@@ -81,6 +81,7 @@ export const updateProductSchema = z.object({
   unitType: z.enum(['unidad', 'kilogramo']).optional(),
   category: z.string().max(100).trim().optional(),
   active: z.boolean().optional(),
+  status: z.enum(['activo', 'incompleto', 'pendiente_revision', 'sin_movimiento', 'oculto', 'archivado']).optional(),
 }).strict();
 
 export const stockChangeSchema = z.object({

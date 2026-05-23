@@ -70,27 +70,30 @@ export class CashRegisterRepository implements ICashRegisterRepository {
     let realizedProfit = 0; // Ganancias reales de efectivo + transferencia
 
     for (const sale of sales) {
-      totalSales += sale.total;
-      salesCount += 1;
-
       // Calcular ganancia de esta venta
       const details = await SaleDetail.find({ sale: sale._id });
       let saleCost = 0;
       for (const detail of details) {
         saleCost += detail.costPrice * detail.quantity;
-        totalCost += detail.costPrice * detail.quantity;
       }
       const saleProfit = sale.total - saleCost;
 
       if (sale.paymentMethod === 'efectivo') {
+        totalSales += sale.total;
+        salesCount += 1;
+        totalCost += saleCost;
         totalCash += sale.total;
         realizedProfit += saleProfit;
       } else if (sale.paymentMethod === 'transferencia') {
+        totalSales += sale.total;
+        salesCount += 1;
+        totalCost += saleCost;
         totalTransfer += sale.total;
         realizedProfit += saleProfit;
       } else if (sale.paymentMethod === 'cuenta_corriente') {
         totalCuentaCorriente += sale.total;
-        // Al fiar, no sumamos la ganancia todavía porque el dinero no está
+        // Al fiar, no sumamos ventas, costos ni ganancias porque el dinero no está en caja.
+        // Solo registramos el monto fiado en totalCuentaCorriente para referencia.
       }
     }
 
@@ -182,9 +185,7 @@ export class CashRegisterRepository implements ICashRegisterRepository {
       incrementFields.totalTransfer = amount;
       incrementFields.totalProfit = profitAmount;
     } else if (paymentMethod === 'cuenta_corriente') {
-      incrementFields.totalSales = amount;
-      incrementFields.totalCost = costAmount;
-      incrementFields.salesCount = amount > 0 ? 1 : -1;
+      // No incrementamos ventas, costo ni cantidad de ventas porque el dinero no entró
       incrementFields.totalCuentaCorriente = amount;
       // Al fiar, la ganancia es 0 porque no tenemos el dinero físico todavía
       incrementFields.totalProfit = 0;

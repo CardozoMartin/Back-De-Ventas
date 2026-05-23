@@ -16,6 +16,9 @@ productRouter.post('/', verifyToken, validate(createProductSchema), productContr
 //ruta para obtener todos los productos sin paginacion
 productRouter.get('/all', verifyToken, productController.getAllProductsNoPagination);
 
+//ruta para ejecutar mantenimiento manual
+productRouter.post('/maintenance/run', verifyToken, productController.runMaintenance);
+
 //ruta para buscar productos por coincidencias
 productRouter.get('/search-match/query', verifyToken, productController.searchProducts);
 

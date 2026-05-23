@@ -4,6 +4,7 @@ import { ISuccessResponse } from "../types/IResponse.types";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../middlewares/errorHandler";
 import { catchAsync } from "../utils/catchAsync";
+import { ProductMaintenanceJob } from "../service/ProductMaintenanceJob";
 
 @injectable()
 export class ProductController {
@@ -157,6 +158,19 @@ export class ProductController {
       success: true,
       data: products,
       message: "Productos obtenidos exitosamente",
+      timestamp: new Date(),
+    };
+    res.status(200).json(response);
+  });
+
+  //controlador para ejecutar mantenimiento manual
+  runMaintenance = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    await ProductMaintenanceJob.runMaintenance();
+    
+    const response: ISuccessResponse<null> = {
+      success: true,
+      data: null,
+      message: "Mantenimiento del catálogo ejecutado exitosamente",
       timestamp: new Date(),
     };
     res.status(200).json(response);
